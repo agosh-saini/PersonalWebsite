@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="AGOSH.EXE — the interactive video-game version of Agosh Saini's CV. Explore the cleanroom, lab, garage, and dojo to uncover the full story.">
+  <meta name="author" content="Agosh Saini">
+  <title>AGOSH.EXE — Agosh Saini, The Game</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Vercel Analytics -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+
+  <style>
+    :root {
+      --bg:      #0F0D0B;
+      --raised:  #1C1814;
+      --accent:  #E8503A;
+      --gold:    #D4AA6A;
+      --outline: #2E2620;
+      --t1:      #F2E8D9;
+      --t2:      #C4B09A;
+      --t3:      #8C7B6A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--t1);
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
+    }
+
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      image-rendering: pixelated;
+    }
+
+    /* CRT scanline flavour */
+    #scanlines {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
+        rgba(0,0,0,0.10) 3px, rgba(0,0,0,0.10) 4px
+      );
+      z-index: 5;
+    }
+
+    /* ── HUD ── */
+    #hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hud-chip {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--t2);
+      background: rgba(15,13,11,0.85);
+      border: 1px solid var(--outline);
+      padding: 9px 12px;
+      pointer-events: auto;
+    }
+
+    .hud-chip b { color: var(--gold); font-weight: normal; }
+
+    a.hud-chip { text-decoration: none; color: var(--accent); }
+    a.hud-chip:hover { background: var(--accent); color: var(--t1); }
+
+    /* zone banner */
+    #zone-banner {
+      position: fixed;
+      top: 64px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      background: rgba(15,13,11,0.85);
+      border: 1px solid var(--outline);
+      padding: 10px 18px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    /* ── DIALOG ── */
+    #dialog {
+      position: fixed;
+      left: 50%; bottom: 24px;
+      transform: translateX(-50%);
+      width: min(660px, calc(100vw - 32px));
+      background: rgba(15,13,11,0.96);
+      border: 2px solid var(--t2);
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--outline);
+      padding: 20px 24px 16px;
+      z-index: 20;
+      display: none;
+    }
+
+    #dialog.open { display: block; animation: pop 0.12s steps(2) both; }
+
+    @keyframes pop {
+      from { transform: translateX(-50%) scale(0.96); }
+      to   { transform: translateX(-50%) scale(1); }
+    }
+
+    #dialog-tag {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    #dialog-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--t1);
+      margin-bottom: 12px;
+    }
+
+    #dialog-text {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--t2);
+      margin-bottom: 14px;
+    }
+
+    #dialog-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--t3);
+    }
+
+    #dialog-footer .blink { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── OVERLAYS (intro / complete) ── */
+    .overlay {
+      position: fixed; inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15,13,11,0.92);
+      padding: 24px;
+    }
+
+    .overlay.open { display: flex; }
+
+    .overlay-box {
+      max-width: 560px;
+      width: 100%;
+      border: 2px solid var(--t2);
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--outline);
+      background: var(--bg);
+      padding: 40px 36px;
+      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .overlay-eyebrow {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--gold);
+      margin-bottom: 18px;
+      letter-spacing: 0.1em;
+    }
+
+    .overlay-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(18px, 4.5vw, 28px);
+      color: var(--t1);
+      line-height: 1.4;
+      margin-bottom: 18px;
+    }
+
+    .overlay-title em { font-style: normal; color: var(--accent); }
+
+    .overlay-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--t2);
+      margin-bottom: 26px;
+    }
+
+    .overlay-controls {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      line-height: 2.4;
+      color: var(--t3);
+      margin-bottom: 26px;
+    }
+
+    .overlay-controls b { color: var(--t2); font-weight: normal; }
+
+    .btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      background: var(--accent);
+      color: var(--t1);
+      border: none;
+      padding: 16px 28px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 4px;
+    }
+
+    .btn:hover { background: #C83A26; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--outline);
+      color: var(--t3);
+    }
+
+    .btn-ghost:hover { background: transparent; border-color: var(--t2); color: var(--t2); }
+
+    .end-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .end-links a {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--gold);
+      border: 1px solid var(--outline);
+      text-decoration: none;
+      padding: 10px 12px;
+    }
+
+    .end-links a:hover { border-color: var(--gold); }
+
+    /* ── TOUCH CONTROLS ── */
+    #touch-ui { display: none; }
+
+    body.touch #touch-ui { display: block; }
+
+    .dpad {
+      position: fixed;
+      left: 18px; bottom: 22px;
+      width: 150px; height: 150px;
+      z-index: 15;
+    }
+
+    .dpad button, #btn-a {
+      position: absolute;
+      width: 50px; height: 50px;
+      background: rgba(28,24,20,0.85);
+      border: 1px solid var(--outline);
+      color: var(--t2);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      touch-action: none;
+    }
+
+    .dpad button:active, #btn-a:active { background: rgba(232,80,58,0.5); }
+
+    #d-up    { top: 0;    left: 50px; }
+    #d-down  { bottom: 0; left: 50px; }
+    #d-left  { top: 50px; left: 0; }
+    #d-right { top: 50px; right: 0; }
+
+    #btn-a {
+      right: 26px; bottom: 60px;
+      width: 64px; height: 64px;
+      border-radius: 0;
+      color: var(--accent);
+      font-size: 14px;
+      z-index: 15;
+    }
+
+    @media (max-width: 700px) {
+      #hud { padding: 10px; }
+      .hud-chip { font-size: 7px; padding: 7px 9px; }
+      #dialog { bottom: auto; top: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<div id="scanlines"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <span class="hud-chip">AGOSH.EXE</span>
+  <span class="hud-chip">ARTIFACTS <b id="hud-count">0/15</b></span>
+  <a class="hud-chip" href="/">EXIT &#9656;</a>
+</div>
+
+<div id="zone-banner"></div>
+
+<!-- Dialog -->
+<div id="dialog">
+  <div id="dialog-tag"></div>
+  <div id="dialog-title"></div>
+  <div id="dialog-text"></div>
+  <div id="dialog-footer">
+    <span id="dialog-progress"></span>
+    <span class="blink">[E] CLOSE &#9660;</span>
+  </div>
+</div>
+
+<!-- Intro -->
+<div id="intro" class="overlay open">
+  <div class="overlay-box">
+    <div class="overlay-eyebrow">AN INTERACTIVE CV &middot; EST. 2026</div>
+    <div class="overlay-title">AGOSH<em>.EXE</em></div>
+    <p class="overlay-text">
+      Somewhere between a cleanroom, a research lab, a startup garage, and a dojo
+      lives the story of <b>Agosh Saini</b> — engineer, researcher, builder.
+      Walk around. Examine things. Find all <b>15 artifacts</b> to unlock the ending.
+    </p>
+    <div class="overlay-controls">
+      <b>WASD / ARROWS</b> ... MOVE<br>
+      <b>E / ENTER</b> ........ EXAMINE<br>
+      <b>TOUCH</b> ............ D-PAD + A
+    </div>
+    <button class="btn" id="btn-start">&#9656; PRESS START</button>
+    <a class="btn btn-ghost" href="/">READ INSTEAD</a>
+  </div>
+</div>
+
+<!-- Completion -->
+<div id="complete" class="overlay">
+  <div class="overlay-box">
+    <div class="overlay-eyebrow">&#9733; 15/15 ARTIFACTS &#9733;</div>
+    <div class="overlay-title">STORY<br><em>COMPLETE</em></div>
+    <p class="overlay-text">
+      You now know more about Agosh than most of his relatives do.
+      Two degrees, three startups, two journal papers, one consulting practice —
+      and a heavy bag for everything in between.
+      The sequel is unwritten. Want to be in it?
+    </p>
+    <div class="end-links">
+      <a href="mailto:contact@agoshsaini.com">EMAIL</a>
+      <a href="https://www.linkedin.com/in/agosh-saini/" target="_blank" rel="noopener">LINKEDIN</a>
+      <a href="https://github.com/agosh-saini" target="_blank" rel="noopener">GITHUB</a>
+      <a href="https://drive.google.com/file/d/1lmRAQ4jczjBn-2LT8NZ2zeip6X8I0WXH/view?usp=drive_link" target="_blank" rel="noopener">RESUME</a>
+    </div>
+    <button class="btn btn-ghost" id="btn-roam">KEEP EXPLORING</button>
+    <a class="btn" href="/">&#9656; EXIT TO SITE</a>
+  </div>
+</div>
+
+<!-- Touch controls -->
+<div id="touch-ui">
+  <div class="dpad">
+    <button id="d-up">&#9650;</button>
+    <button id="d-left">&#9664;</button>
+    <button id="d-right">&#9654;</button>
+    <button id="d-down">&#9660;</button>
+  </div>
+  <button id="btn-a">A</button>
+</div>
+
+<script>
+'use strict';
+
+/* ════════════════════════ WORLD ════════════════════════ */
+
+var MAP_W = 46, MAP_H = 34;
+var T = 40; // tile render size, adjusted for small screens below
+if (Math.min(window.innerWidth, window.innerHeight) < 560) T = 32;
+
+// rooms: [x0, y0, x1, y1, floorType]
+var ROOMS = [
+  [17, 13, 28, 20, 'h'], // central hub
+  [ 3,  3, 19, 10, 'c'], // cleanroom
+  [26,  3, 42, 10, 'l'], // research lab
+  [ 3, 23, 19, 30, 'g'], // startup garage
+  [26, 23, 42, 30, 'd']  // dojo
+];
+
+// corridors carved as hub floor
+var CORRIDORS = [
+  [18, 10, 19, 13],
+  [26, 10, 27, 13],
+  [18, 20, 19, 23],
+  [26, 20, 27, 23]
+];
+
+var ZONE_NAMES = {
+  h: 'THE HUB',
+  c: 'THE CLEANROOM',
+  l: 'THE RESEARCH LAB',
+  g: 'THE STARTUP GARAGE',
+  d: 'THE DOJO'
+};
+
+var ZONE_LABELS = [
+  { x: 11,   y: 6.5,  text: 'CLEANROOM' },
+  { x: 34,   y: 6.5,  text: 'RESEARCH LAB' },
+  { x: 11,   y: 26.5, text: 'STARTUP GARAGE' },
+  { x: 34,   y: 26.5, text: 'DOJO' },
+  { x: 22.5, y: 16.5, text: 'HUB' }
+];
+
+// build grid: '#' wall, else floor type char
+var grid = [];
+(function buildGrid() {
+  var x, y;
+  for (y = 0; y < MAP_H; y++) {
+    grid[y] = [];
+    for (x = 0; x < MAP_W; x++) grid[y][x] = '#';
+  }
+  ROOMS.concat(CORRIDORS.map(function (c) { return c.concat('h'); }))
+    .forEach(function (r) {
+      for (y = r[1]; y <= r[3]; y++)
+        for (x = r[0]; x <= r[2]; x++)
+          grid[y][x] = r[4];
+    });
+})();
+
+/* ════════════════════════ ARTIFACTS ════════════════════════ */
+
+var OBJECTS = [
+  // ── CLEANROOM ──
+  { id: 'ald', x: 5, y: 4, kind: 'machine',
+    tag: 'M.A.SC. RESEARCH · IDEATION LAB',
+    title: 'Thin-Film Deposition Rig',
+    text: 'Agosh’s master’s research at the University of Waterloo: a novel thin-film semiconductor deposition process, developed at the IDEATION Lab. The films became high-performance gas and humidity sensors — chemistry you can actually deploy.' },
+  { id: 'wafer', x: 11, y: 4, kind: 'wafer',
+    tag: 'CO-OP · TELEDYNE DALSA',
+    title: 'Silicon Wafer Station',
+    text: 'Cleanroom co-op at Teledyne DALSA, a world leader in imaging technology. Semiconductor and MEMS process development — gowning up, running real production tooling, and characterizing processes wafer by wafer.' },
+  { id: 'pub1', x: 16, y: 4, kind: 'shelf',
+    tag: 'PUBLICATION · SMALL · 2025',
+    title: 'A Framed Issue of “Small”',
+    text: 'First-author, peer-reviewed: “CuOx Thin Films for High-Performance Humidity Sensing,” published in the journal Small. The deposition process from this very room — reviewed, accepted, in print.' },
+  { id: 'pub2', x: 5, y: 9, kind: 'shelf',
+    tag: 'PUBLICATION · ADV. SENSOR RESEARCH · 2024',
+    title: 'Advanced Sensor Research',
+    text: '“PEDOT:PSS Composite Hydrogels for Flexible Biosensing Applications” — soft, flexible sensors that read biology without fighting it. Published in Advanced Sensor Research during his undergrad.' },
+
+  // ── RESEARCH LAB ──
+  { id: 'qcm', x: 29, y: 4, kind: 'scope',
+    tag: 'B.A.SC. THESIS · LIME LAB',
+    title: 'Quartz Crystal Microbalance',
+    text: 'Undergraduate thesis: design, fabrication, and characterization of QCM biosensors — crystals that weigh single layers of molecules by how their ringing changes. Plus lab-on-a-chip microfluidics research at the LiME Lab.' },
+  { id: 'robot', x: 35, y: 4, kind: 'robot',
+    tag: 'CAPSTONE DESIGN PROJECT',
+    title: 'Magnetic Micro-Robot',
+    text: 'Capstone project: magnetically controlled micro-robots for targeted drug delivery. Steer a speck of engineered matter through the body using nothing but a magnetic field.' },
+  { id: 'enose', x: 40, y: 4, kind: 'enose',
+    tag: 'PROJECT · SENSING + ML',
+    title: 'Electronic Nose',
+    text: 'A machine that smells. Custom gas-sensor arrays paired with machine-learning pipelines that turn raw resistance curves into answers — built end to end, from sensor film to trained model.' },
+  { id: 'degrees', x: 35, y: 9, kind: 'plaque',
+    tag: 'UNIVERSITY OF WATERLOO',
+    title: 'Two Degrees, One School',
+    text: 'B.A.Sc. Nanotechnology Engineering (2019–2024) and M.A.Sc. Mechanical & Mechatronics Engineering (2024–2025), both from the University of Waterloo. Six years of co-ops, cleanrooms, and late-night lab sessions.' },
+
+  // ── STARTUP GARAGE ──
+  { id: 'kenota', x: 5, y: 25, kind: 'bench',
+    tag: 'CO-OP · KENOTA HEALTH (YC)',
+    title: 'Point-of-Care Diagnostics Rig',
+    text: 'Kenota Health, a Y Combinator-backed diagnostics startup. Agosh worked on hardware and intellectual property — including patent documentation for medical-grade point-of-care devices.' },
+  { id: 'avro', x: 11, y: 25, kind: 'patch',
+    tag: 'CO-OP · AVRO LIFE SCIENCE (YC)',
+    title: 'Skin-Patch Prototype',
+    text: 'Avro Life Science, another YC company, building drug-delivering skin patches. Contributed to instrumentation and the hardware-software integration that makes a bench prototype behave like a product.' },
+  { id: 'consult', x: 16, y: 25, kind: 'desk',
+    tag: 'NOW · INDEPENDENT CONSULTING',
+    title: 'The Consulting Desk',
+    text: 'Current practice: medical-device integration and data pipelines for Scarborough Health Network, sensor fusion and ML for Mecka AI’s robotics platform, and systems architecture for a stealth manufacturing startup.' },
+  { id: 'router', x: 5, y: 29, kind: 'router',
+    tag: 'PROJECTS · HARDWARE',
+    title: 'Pocket Hardware Shelf',
+    text: 'A privacy-focused travel router built on a Raspberry Pi Zero 2W, and an encrypted recording device with GPG, physical button controls, and a 3D-printed enclosure. Hardware you can fit in a jacket pocket.' },
+  { id: 'devbox', x: 11, y: 29, kind: 'computer',
+    tag: 'PROJECTS · SOFTWARE',
+    title: 'The Dev Machine',
+    text: 'Preceptra — a live, AI-powered training tool for hands-on industries. Plus lab-automation and data pre-processing software that strips the boring parts out of research workflows.' },
+
+  // ── DOJO ──
+  { id: 'bag', x: 29, y: 25, kind: 'bag',
+    tag: 'OFF THE CLOCK',
+    title: 'The Heavy Bag',
+    text: 'Muay Thai — the art of eight limbs. The counterweight to lab work: discipline, conditioning, and the occasional shin bruise. Train hard, publish harder.' },
+  { id: 'hobby', x: 36, y: 25, kind: 'bike',
+    tag: 'OFF THE CLOCK',
+    title: 'Trail Bike & House Plants',
+    text: 'Mountain biking and an unreasonable number of house plants. And yes — this entire game is a love letter to Fallout, his favourite series. War never changes; resumes apparently do.' }
+];
+
+var objAt = {};
+OBJECTS.forEach(function (o) { objAt[o.x + ',' + o.y] = o; });
+
+/* ════════════════════════ STATE ════════════════════════ */
+
+var found = {};
+try {
+  (JSON.parse(localStorage.getItem('agosh-exe-found') || '[]')).forEach(function (id) { found[id] = true; });
+} catch (e) { /* fresh save */ }
+
+function foundCount() { return Object.keys(found).length; }
+
+function saveFound() {
+  try { localStorage.setItem('agosh-exe-found', JSON.stringify(Object.keys(found))); } catch (e) {}
+}
+
+var player = { x: 22.5, y: 16.8, r: 0.32, facing: 1, moving: false };
+var keys = {};
+var started = false;
+var dialogOpen = false;
+var completeShown = foundCount() >= OBJECTS.length;
+var currentZone = '';
+var camX = 0, camY = 0;
+
+/* ════════════════════════ CANVAS ════════════════════════ */
+
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+function resize() {
+  canvas.width = Math.floor(window.innerWidth * DPR);
+  canvas.height = Math.floor(window.innerHeight * DPR);
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ════════════════════════ INPUT ════════════════════════ */
+
+var KEYMAP = {
+  ArrowUp: 'up', KeyW: 'up',
+  ArrowDown: 'down', KeyS: 'down',
+  ArrowLeft: 'left', KeyA: 'left',
+  ArrowRight: 'right', KeyD: 'right'
+};
+
+document.addEventListener('keydown', function (e) {
+  if (KEYMAP[e.code]) { keys[KEYMAP[e.code]] = true; e.preventDefault(); }
+  if (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'Space') {
+    e.preventDefault();
+    if (!started) { startGame(); return; }
+    interact();
+  }
+  if (e.code === 'Escape') closeDialog();
+});
+
+document.addEventListener('keyup', function (e) {
+  if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = false;
+});
+
+// touch
+function bindHold(id, dir) {
+  var el = document.getElementById(id);
+  var on = function (e) { e.preventDefault(); keys[dir] = true; };
+  var off = function (e) { e.preventDefault(); keys[dir] = false; };
+  el.addEventListener('touchstart', on);
+  el.addEventListener('touchend', off);
+  el.addEventListener('touchcancel', off);
+}
+bindHold('d-up', 'up'); bindHold('d-down', 'down');
+bindHold('d-left', 'left'); bindHold('d-right', 'right');
+
+document.getElementById('btn-a').addEventListener('touchstart', function (e) {
+  e.preventDefault();
+  if (!started) { startGame(); return; }
+  interact();
+});
+
+window.addEventListener('touchstart', function onFirstTouch() {
+  document.body.classList.add('touch');
+  window.removeEventListener('touchstart', onFirstTouch);
+});
+
+/* ════════════════════════ GAME FLOW ════════════════════════ */
+
+function startGame() {
+  started = true;
+  document.getElementById('intro').classList.remove('open');
+  updateHud();
+}
+
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-roam').addEventListener('click', function () {
+  document.getElementById('complete').classList.remove('open');
+});
+
+function updateHud() {
+  document.getElementById('hud-count').textContent = foundCount() + '/' + OBJECTS.length;
+}
+updateHud();
+
+function nearestObject() {
+  var best = null, bestD = 1.45;
+  OBJECTS.forEach(function (o) {
+    var d = Math.hypot(o.x + 0.5 - player.x, o.y + 0.5 - player.y);
+    if (d < bestD) { bestD = d; best = o; }
+  });
+  return best;
+}
+
+function interact() {
+  if (dialogOpen) { closeDialog(); return; }
+  var o = nearestObject();
+  if (!o) return;
+  found[o.id] = true;
+  saveFound();
+  updateHud();
+  document.getElementById('dialog-tag').textContent = o.tag;
+  document.getElementById('dialog-title').textContent = o.title;
+  document.getElementById('dialog-text').textContent = o.text;
+  document.getElementById('dialog-progress').textContent = 'ARTIFACT ' + foundCount() + '/' + OBJECTS.length;
+  document.getElementById('dialog').classList.add('open');
+  dialogOpen = true;
+}
+
+function closeDialog() {
+  if (!dialogOpen) return;
+  document.getElementById('dialog').classList.remove('open');
+  dialogOpen = false;
+  if (foundCount() >= OBJECTS.length && !completeShown) {
+    completeShown = true;
+    setTimeout(function () {
+      document.getElementById('complete').classList.add('open');
+    }, 350);
+  }
+}
+
+/* zone banner */
+var bannerTimer = null;
+function checkZone() {
+  var tx = Math.floor(player.x), ty = Math.floor(player.y);
+  var c = (grid[ty] && grid[ty][tx]) || 'h';
+  if (c === '#' || c === currentZone) return;
+  currentZone = c;
+  var el = document.getElementById('zone-banner');
+  el.textContent = ZONE_NAMES[c];
+  el.style.opacity = 1;
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(function () { el.style.opacity = 0; }, 1800);
+}
+
+/* ════════════════════════ PHYSICS ════════════════════════ */
+
+function solid(tx, ty) {
+  if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return true;
+  if (grid[ty][tx] === '#') return true;
+  return !!objAt[tx + ',' + ty];
+}
+
+function blocked(px, py) {
+  var r = player.r;
+  return solid(Math.floor(px - r), Math.floor(py - r)) ||
+         solid(Math.floor(px + r), Math.floor(py - r)) ||
+         solid(Math.floor(px - r), Math.floor(py + r)) ||
+         solid(Math.floor(px + r), Math.floor(py + r));
+}
+
+function step(dt) {
+  if (!started || dialogOpen) { player.moving = false; return; }
+  var dx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  var dy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+  player.moving = !!(dx || dy);
+  if (!player.moving) return;
+  if (dx) player.facing = dx;
+  var len = Math.hypot(dx, dy);
+  var speed = 5.2 * dt;
+  var nx = player.x + dx / len * speed;
+  var ny = player.y + dy / len * speed;
+  if (!blocked(nx, player.y)) player.x = nx;
+  if (!blocked(player.x, ny)) player.y = ny;
+  checkZone();
+}
+
+/* ════════════════════════ RENDER ════════════════════════ */
+
+var FLOORS = {
+  h: ['#1C1814', '#201B16'],
+  c: ['#191B1A', '#1D1F1E'],
+  l: ['#171821', '#1B1C26'],
+  g: ['#211911', '#251D14'],
+  d: ['#211312', '#251615']
+};
+
+function px(n) { return Math.round(n); }
+
+function drawWorld(time) {
+  var W = canvas.width, H = canvas.height;
+  var S = T * DPR; // tile in device px
+
+  camX = player.x * S - W / 2;
+  camY = player.y * S - H / 2;
+  camX = Math.max(0, Math.min(MAP_W * S - W, camX));
+  camY = Math.max(0, Math.min(MAP_H * S - H, camY));
+  if (MAP_W * S < W) camX = (MAP_W * S - W) / 2;
+  if (MAP_H * S < H) camY = (MAP_H * S - H) / 2;
+
+  ctx.fillStyle = '#0A0908';
+  ctx.fillRect(0, 0, W, H);
+
+  var x0 = Math.max(0, Math.floor(camX / S));
+  var y0 = Math.max(0, Math.floor(camY / S));
+  var x1 = Math.min(MAP_W - 1, Math.ceil((camX + W) / S));
+  var y1 = Math.min(MAP_H - 1, Math.ceil((camY + H) / S));
+
+  // floors + walls
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      var c = grid[y][x];
+      var sx = px(x * S - camX), sy = px(y * S - camY);
+      if (c === '#') {
+        // only draw walls that border floor (the rest is void)
+        var nearFloor = false;
+        for (var oy = -1; oy <= 1 && !nearFloor; oy++)
+          for (var ox = -1; ox <= 1 && !nearFloor; ox++) {
+            var ny2 = y + oy, nx2 = x + ox;
+            if (ny2 >= 0 && nx2 >= 0 && ny2 < MAP_H && nx2 < MAP_W && grid[ny2][nx2] !== '#') nearFloor = true;
+          }
+        if (!nearFloor) continue;
+        ctx.fillStyle = '#262019';
+        ctx.fillRect(sx, sy, S + 1, S + 1);
+        ctx.fillStyle = '#322a21';
+        ctx.fillRect(sx, sy, S + 1, Math.round(S * 0.22));
+        // front face when floor is below
+        if (y + 1 < MAP_H && grid[y + 1][x] !== '#') {
+          ctx.fillStyle = '#181410';
+          ctx.fillRect(sx, sy + Math.round(S * 0.78), S + 1, Math.round(S * 0.22));
+        }
+      } else {
+        var f = FLOORS[c];
+        ctx.fillStyle = f[(x + y) % 2];
+        ctx.fillRect(sx, sy, S + 1, S + 1);
+      }
+    }
+  }
+
+  // floor labels
+  ctx.save();
+  ctx.fillStyle = 'rgba(242,232,217,0.07)';
+  ctx.font = Math.round(S * 0.45) + 'px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ZONE_LABELS.forEach(function (z) {
+    ctx.fillText(z.text, z.x * S - camX + S / 2, z.y * S - camY + S / 2);
+  });
+  ctx.restore();
+
+  // draw objects and player in y-order
+  var drawables = OBJECTS.slice();
+  drawables.push(player);
+  drawables.sort(function (a, b) { return (a.y || 0) - (b.y || 0); });
+
+  var near = (started && !dialogOpen) ? nearestObject() : null;
+
+  drawables.forEach(function (d) {
+    if (d === player) drawPlayer(S, time);
+    else drawObject(d, S, time, d === near);
+  });
+}
+
+/* ── object sprites: chunky rect art on a 1×1 tile base ── */
+function drawObject(o, S, time, highlighted) {
+  var X = px(o.x * S - camX), Y = px(o.y * S - camY);
+  var u = S / 16; // pixel unit
+
+  function r(x, y, w, h, col) {
+    ctx.fillStyle = col;
+    ctx.fillRect(px(X + x * u), px(Y + y * u), Math.ceil(w * u), Math.ceil(h * u));
+  }
+
+  var GREY = '#5A554E', DGREY = '#3A362F', PARCH = '#F2E8D9',
+      RED = '#E8503A', GOLD = '#D4AA6A', DARK = '#16120E', GREEN = '#7FA86A';
+
+  switch (o.kind) {
+    case 'machine': // tall deposition rig
+      r(1, -10, 14, 24, DGREY); r(2, -9, 12, 8, GREY);
+      r(3, -2, 10, 6, DARK); r(4, -1, 8, 4, '#26425A');
+      r(4, 7, 2, 2, RED); r(8, 7, 2, 2, GOLD); r(12, 7, 1, 4, GREY);
+      break;
+    case 'wafer': // table with wafer
+      r(0, -4, 16, 18, DGREY); r(1, -3, 14, 14, GREY);
+      ctx.fillStyle = '#8FA3B8';
+      ctx.beginPath();
+      ctx.arc(X + 8 * u, Y + 4 * u, 5 * u, 0, 7); ctx.fill();
+      ctx.fillStyle = '#B8C8D8';
+      ctx.beginPath();
+      ctx.arc(X + 7 * u, Y + 3 * u, 2 * u, 0, 7); ctx.fill();
+      break;
+    case 'shelf': // bookshelf w/ framed journal
+      r(0, -12, 16, 26, '#4A3826'); r(1, -11, 14, 7, DARK);
+      r(2, -10, 3, 5, RED); r(6, -10, 3, 5, GOLD); r(10, -10, 3, 5, PARCH);
+      r(1, -3, 14, 7, DARK); r(3, -2, 10, 5, PARCH); r(5, -1, 6, 3, RED);
+      break;
+    case 'scope': // microscope on bench
+      r(0, -2, 16, 16, DGREY); r(2, -1, 12, 10, GREY);
+      r(6, -10, 4, 9, PARCH); r(9, -8, 4, 3, PARCH); r(11, -5, 2, 4, DARK);
+      r(4, 9, 8, 2, DARK);
+      break;
+    case 'robot': // micro-robot in a field coil
+      r(1, -4, 14, 18, DGREY); r(2, -3, 12, 12, DARK);
+      r(3, -2, 10, 1, GOLD); r(3, 8, 10, 1, GOLD); r(3, -2, 1, 11, GOLD); r(12, -2, 1, 11, GOLD);
+      r(7, 2, 3, 3, RED); r(6, 3, 1, 1, RED); r(10, 3, 1, 1, RED);
+      break;
+    case 'enose': // box with nose lights
+      r(1, -6, 14, 20, DGREY); r(2, -5, 12, 10, DARK);
+      r(4, -3, 2, 2, GREEN); r(7, -3, 2, 2, GOLD); r(10, -3, 2, 2, RED);
+      r(4, 1, 8, 2, '#26425A'); r(6, -9, 4, 3, GREY);
+      break;
+    case 'plaque': // wall plaque / trophies
+      r(0, -10, 16, 24, '#4A3826'); r(2, -8, 12, 9, GOLD);
+      r(3, -7, 10, 7, DARK); r(4, -5, 8, 1, GOLD); r(4, -3, 6, 1, GOLD);
+      r(3, 4, 4, 6, GOLD); r(9, 4, 4, 6, PARCH);
+      break;
+    case 'bench': // diagnostics bench
+      r(0, -4, 16, 18, DGREY); r(1, -3, 14, 12, GREY);
+      r(2, -2, 5, 7, PARCH); r(3, -1, 3, 2, RED); r(3, 2, 3, 1, DARK);
+      r(9, -2, 5, 5, DARK); r(10, -1, 3, 3, GREEN);
+      break;
+    case 'patch': // skin patch rig
+      r(0, -4, 16, 18, DGREY); r(1, -3, 14, 12, GREY);
+      r(3, -2, 10, 8, '#C49A7A'); r(5, 0, 6, 4, PARCH); r(6, 1, 4, 2, RED);
+      break;
+    case 'desk': // consulting desk w/ papers
+      r(0, -4, 16, 18, '#4A3826'); r(1, -3, 14, 12, '#5C4630');
+      r(2, -2, 5, 6, PARCH); r(8, -2, 6, 4, DARK); r(9, -1, 4, 2, '#26425A');
+      r(3, 0, 3, 1, DGREY); r(3, 2, 3, 1, DGREY);
+      break;
+    case 'router': // shelf of small hardware
+      r(0, -8, 16, 22, DGREY); r(1, -7, 14, 6, DARK);
+      r(2, -6, 5, 3, GREEN); r(8, -6, 5, 3, DGREY); r(9, -5, 1, 1, RED);
+      r(1, 1, 14, 6, DARK); r(2, 2, 6, 4, GREY); r(10, 2, 4, 4, '#26425A');
+      r(13, -10, 1, 3, GREY);
+      break;
+    case 'computer': // battlestation
+      r(0, -4, 16, 18, DGREY); r(1, -3, 14, 12, GREY);
+      r(2, -10, 12, 8, DARK); r(3, -9, 10, 6, '#26425A');
+      r(4, -8, 5, 1, GREEN); r(4, -6, 7, 1, PARCH);
+      r(4, 0, 8, 3, DARK);
+      break;
+    case 'bag': // heavy bag hanging
+      r(7, -12, 2, 3, DGREY);
+      r(4, -9, 8, 16, RED); r(4, -9, 8, 3, '#C83A26');
+      r(5, -2, 6, 1, DARK); r(4, 6, 8, 2, '#C83A26');
+      break;
+    case 'bike': // bike + plant
+      r(0, 4, 7, 1, DGREY);
+      ctx.strokeStyle = GREY; ctx.lineWidth = Math.max(1, u);
+      ctx.beginPath(); ctx.arc(X + 3 * u, Y + 6 * u, 3 * u, 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(X + 11 * u, Y + 6 * u, 3 * u, 0, 7); ctx.stroke();
+      r(3, 0, 8, 1, RED); r(6, -2, 1, 4, RED); r(10, -2, 3, 1, GREY);
+      r(13, 2, 3, 8, '#8A5A36');
+      r(12, -4, 5, 6, GREEN); r(13, -7, 3, 4, GREEN);
+      break;
+  }
+
+  // discovery indicator
+  var bob = Math.sin(time / 280) * 3 * u;
+  ctx.font = Math.round(8 * u) + 'px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  if (!found[o.id]) {
+    ctx.fillStyle = GOLD;
+    ctx.fillText('!', X + 8 * u, Y - 14 * u + bob);
+  } else {
+    ctx.fillStyle = 'rgba(140,123,106,0.6)';
+    ctx.font = Math.round(6 * u) + 'px "Press Start 2P", monospace';
+    ctx.fillText('✓', X + 8 * u, Y - 14 * u);
+  }
+
+  // interact prompt
+  if (highlighted) {
+    ctx.fillStyle = 'rgba(15,13,11,0.9)';
+    ctx.fillRect(X - 2 * u, Y + 18 * u, 20 * u, 9 * u);
+    ctx.strokeStyle = RED; ctx.lineWidth = Math.max(1, u * 0.8);
+    ctx.strokeRect(X - 2 * u, Y + 18 * u, 20 * u, 9 * u);
+    ctx.fillStyle = PARCH;
+    ctx.font = Math.round(5 * u) + 'px "Press Start 2P", monospace';
+    ctx.fillText(document.body.classList.contains('touch') ? 'A' : 'E', X + 8 * u, Y + 24.5 * u);
+  }
+}
+
+/* ── player sprite ── */
+function drawPlayer(S, time) {
+  var u = S / 16;
+  var X = px(player.x * S - camX - 8 * u);
+  var Y = px(player.y * S - camY - 20 * u);
+  var walk = player.moving ? Math.sin(time / 90) : 0;
+  var f = player.facing;
+
+  function r(x, y, w, h, col) {
+    if (f < 0) x = 16 - x - w; // mirror when facing left
+    ctx.fillStyle = col;
+    ctx.fillRect(px(X + x * u), px(Y + y * u), Math.ceil(w * u), Math.ceil(h * u));
+  }
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(X + 8 * u, Y + 25 * u, 5.5 * u, 2 * u, 0, 0, 7);
+  ctx.fill();
+
+  // legs
+  r(5, 19 + (walk > 0.3 ? 1 : 0), 3, 5 - (walk > 0.3 ? 1 : 0), '#2A2522');
+  r(9, 19 + (walk < -0.3 ? 1 : 0), 3, 5 - (walk < -0.3 ? 1 : 0), '#2A2522');
+  // jacket (vermilion — easy to spot)
+  r(4, 10, 9, 9, '#E8503A');
+  r(4, 10, 9, 2, '#C83A26');
+  r(12, 11, 2, 6, '#C49A7A'); // hand
+  // head
+  r(5, 2, 7, 7, '#C49A7A');
+  r(4, 0, 9, 4, '#1A1410');   // hair
+  r(4, 2, 1, 3, '#1A1410');
+  r(9, 4, 1.6, 1.6, '#16120E'); // eye
+  ctx.globalAlpha = 1;
+}
+
+/* ════════════════════════ LOOP ════════════════════════ */
+
+var last = performance.now();
+function loop(now) {
+  var dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  step(dt);
+  drawWorld(now);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>

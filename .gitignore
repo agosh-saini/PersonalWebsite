@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Vercel
+.vercel/
+
+# Node (if tooling is ever added)
+node_modules/
+
+# Logs & temp
+*.log
+tmp/
