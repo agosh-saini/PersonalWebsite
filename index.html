@@ -97,6 +97,29 @@
     }
     .nav-cta:hover { background: var(--accent); color: var(--t1) !important; }
 
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+    }
+
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 1.5px;
+      background: var(--t2);
+      transition: transform 0.25s, opacity 0.25s, width 0.25s;
+      transform-origin: center;
+    }
+
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
     /* ── HERO ── */
     #hero {
       position: relative; z-index: 1;
@@ -496,8 +519,35 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
-      nav { padding: 18px 24px; }
-      .nav-links { display: none; }
+      nav {
+        padding: 18px 24px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .nav-hamburger { display: flex; }
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        padding: 16px 0 8px;
+        order: 3;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links li { width: 100%; }
+      .nav-links a {
+        display: block;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--outline);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+      }
+      .nav-cta {
+        border: none !important;
+        padding: 14px 0 !important;
+        border-bottom: 1px solid var(--outline) !important;
+      }
+      .nav-cta:hover { background: none !important; color: var(--accent) !important; }
       #hero { padding: 120px 24px 64px; }
       .container { padding: 0 24px; }
       .fact-grid { grid-template-columns: 1fr; }
@@ -517,8 +567,11 @@
 
 <!-- ── NAV ── -->
 <nav>
-  <a href="#hero" class="nav-logo">Agosh.</a>
-  <ul class="nav-links">
+  <a href="#hero" class="nav-logo">Agosh Saini</a>
+  <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="nav-links">
     <li><a href="#story">Story</a></li>
     <li><a href="#timeline">Timeline</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -535,23 +588,22 @@
     <span class="hero-name-ghost">Saini</span>
   </h1>
   <p class="hero-subtitle">
-    Engineer and researcher who builds across the whole stack — from
-    <strong>thin-film semiconductors</strong> in the cleanroom to <strong>embedded firmware</strong>
-    on the bench to <strong>machine learning</strong> in production. M.A.Sc., Mechanical &amp;
-    Mechatronics Engineering, University of Waterloo.
+    Engineer and researcher who builds across the whole stack. From
+    <strong>thin-film semiconductors</strong> in the cleanroom to <strong>messing with robotics</strong>
+    to creating software around <strong>machine learning models</strong>. Graduated from the University of Waterloo with a M.A.Sc. in Mechanical &amp; Mechatronics Engineering and a B.A.Sc. in Nanotechnology Engineering.
   </p>
 
   <div class="hero-actions">
-    <a href="#story" class="btn-primary">Read the One-Pager</a>
+    <a href="https://drive.google.com/file/d/1lmRAQ4jczjBn-2LT8NZ2zeip6X8I0WXH/view?usp=drive_link" class="btn-primary">Read My Resume</a>
     <a href="/game" class="btn-ghost">▶ Gamer Version — Under Construction</a>
   </div>
 
   <div class="hero-quick-links">
+    <a href="mailto:contact@agoshsaini.com" class="quick-link">Email</a>
     <a href="https://github.com/agosh-saini" class="quick-link" target="_blank" rel="noopener">GitHub</a>
     <a href="https://www.linkedin.com/in/agosh-saini/" class="quick-link" target="_blank" rel="noopener">LinkedIn</a>
     <a href="https://substack.com/@agoshsaini" class="quick-link" target="_blank" rel="noopener">Substack</a>
     <a href="https://scholar.google.ca/citations?hl=en&user=yFrqYN4AAAAJ" class="quick-link" target="_blank" rel="noopener">Google Scholar</a>
-    <a href="mailto:contact@agoshsaini.com" class="quick-link">Email</a>
   </div>
 </div>
 
@@ -564,47 +616,45 @@
     </div>
     <h2 class="section-title">What I've Done</h2>
 
-    <p class="story-lead fade-in">
-      Two engineering degrees, three startup co-ops, two peer-reviewed publications, and a
-      consulting practice — all built around one idea: <em>take things from bench to deployment.</em>
-      I fabricate the sensor, write the firmware, and train the model that makes sense of the data.
-    </p>
+    <!-- <p class="story-lead fade-in">
+      My work is built around one idea - <em>taking things from bench to deployment.</em>
+      I fabricate the sensor, write the firmware, and train the model that makes sense of the data. And sometimes, I just build things that don't exist yet.
+    </p> -->
 
     <div class="fact-grid">
       <div class="fact-card fade-in">
         <div class="fact-tag">Education</div>
         <div class="fact-title">University of Waterloo ×2</div>
         <div class="fact-desc">
-          <strong>M.A.Sc. Mechanical &amp; Mechatronics Engineering</strong> (2024–2025) on a foundation of
-          <strong>B.A.Sc. Nanotechnology Engineering</strong> (2019–2024). Thesis work on novel
-          thin-film semiconductor deposition for gas and humidity sensing.
+          <strong>M.A.Sc. Mechanical &amp; Mechatronics Engineering</strong> (2023–2026) on a foundation of
+          <strong>B.A.Sc. Nanotechnology Engineering</strong> (2018–2023). Thesis work on novel
+          one step thin-film semiconductor deposition method for making selective electronic noses cheaper and more accessible.
         </div>
       </div>
       <div class="fact-card fade-in">
         <div class="fact-tag">Research</div>
         <div class="fact-title">Published &amp; Cited</div>
         <div class="fact-desc">
-          First-author work in <strong><em>Small</em></strong> (CuOx thin films for humidity sensing) and
-          <strong><em>Advanced Sensor Research</em></strong> (PEDOT:PSS hydrogels for flexible biosensing),
-          plus a thesis on quartz crystal microbalance biosensing.
+          Contributed to <strong>three peer-reviewed research publications</strong> in journals such as <strong><em>Small</em></strong> 
+          and <strong><em>Advanced Sensor Research</em></strong>. Topic of research include thin-film semiconductors depsition, sensor fabrication, biosensing.
         </div>
       </div>
       <div class="fact-card fade-in">
         <div class="fact-tag">Industry</div>
-        <div class="fact-title">Startups &amp; Semiconductors</div>
+        <div class="fact-title">Startups &amp; Corporate Work Experience</div>
         <div class="fact-desc">
-          Engineering co-ops at <strong>Kenota Health (YC)</strong> and <strong>Avro Life Science (YC)</strong>
-          building point-of-care diagnostics and life-science instrumentation, and
-          <strong>Teledyne DALSA</strong> doing cleanroom MEMS process development.
+          Co-ops/internships at <strong>Kenota Health (YC)</strong>, <strong>Avro Life Science (YC)</strong>, 
+          <strong>Teledyne DALSA</strong>, and <strong>LiME Lab @ UVictoria</strong>. Work spaned from 
+          software development to cleanroom process development to biosensing research. 
         </div>
       </div>
       <div class="fact-card fade-in">
         <div class="fact-tag">Now</div>
         <div class="fact-title">Consulting &amp; Building</div>
         <div class="fact-desc">
-          Technical consulting for <strong>Scarborough Health Network</strong>, <strong>Mecka AI</strong>,
-          and a stealth manufacturing startup. Side projects: <strong>Preceptra</strong> (AI training tool),
-          a Pi-based travel router, and lab-automation software.
+          Technical consulting for <strong>large healthcare network research institute</strong>, <strong>Humanoid data collection company</strong>,
+          a <strong>battery manufacturing startup</strong>, and <strong>robotics company</strong>. Impactful personal projects include <strong>Preceptra</strong> (AI training tool),
+          a <strong></strong>Pi-based travel router</strong>, and <strong>lab-automation software</strong>.
         </div>
       </div>
     </div>
@@ -618,28 +668,24 @@
       <span class="eyebrow">02</span>
       <span class="section-num">Timeline</span>
     </div>
-    <h2 class="section-title">Bench to Deployment</h2>
+    <h2 class="section-title">My Work Journey</h2>
 
     <div class="timeline">
       <div class="tl-item fade-in">
-        <div class="tl-year">2019</div>
-        <div class="tl-text">Start <strong>Nanotechnology Engineering</strong> at the University of Waterloo.</div>
+        <div class="tl-year">2018</div>
+        <div class="tl-text">Start <strong>B.A.Sc. (Co-op)</strong> in <strong>Nanotechnology Engineering</strong> at the University of Waterloo.</div>
       </div>
       <div class="tl-item fade-in">
         <div class="tl-year">2020 — 22</div>
-        <div class="tl-text">Co-op tour: patents at <strong>Kenota Health (YC)</strong>, instrumentation at <strong>Avro Life Science (YC)</strong>, cleanroom MEMS process development at <strong>Teledyne DALSA</strong>, and lab-on-a-chip research at the <strong>LiME Lab</strong>.</div>
+        <div class="tl-text">Co-op tour: patents at <strong>Kenota Health (YC)</strong>, instrumentation at <strong>Avro Life Science (YC)</strong>, cleanroom MEMS process development at <strong>Teledyne DALSA</strong>, and lab-on-a-chip research at the <strong>LiME Lab</strong>. Research assistant during non-co-op terms.</div>
       </div>
       <div class="tl-item fade-in">
-        <div class="tl-year">2024</div>
-        <div class="tl-text">B.A.Sc. complete — thesis on <strong>quartz crystal microbalance biosensing</strong>. First publication in <strong><em>Advanced Sensor Research</em></strong>. Begin M.A.Sc. at the <strong>IDEATION Lab</strong>.</div>
-      </div>
-      <div class="tl-item fade-in">
-        <div class="tl-year">2025</div>
-        <div class="tl-text">Publish <strong>CuOx thin-film humidity sensing</strong> in <strong><em>Small</em></strong>. M.A.Sc. complete. Launch consulting practice across healthcare, robotics, and manufacturing.</div>
+        <div class="tl-year">2023-2025</div>
+        <div class="tl-text">B.A.Sc. complete. Start <strong>M.A.Sc. (Thesis) </strong> in <strong>Mechanical &amp; Mechatronics Engineering</strong> at the Musselman Lab. Recieved  <strong>WIN-Velocity Scholarship (36 000 CAD)</strong> and <strong>Velocity Commercilization grant (15 000 CAD)</strong>.</div>
       </div>
       <div class="tl-item fade-in">
         <div class="tl-year">Now</div>
-        <div class="tl-text">Consulting, independent research, and building <strong>things that don't exist yet</strong>. Muay Thai in the margins.</div>
+        <div class="tl-text">Consulting, independent research, and <strong>building things that don't exist yet</strong>. </div>
       </div>
     </div>
   </div>
@@ -676,10 +722,9 @@
 
     <div class="contact-layout">
       <div class="fade-in">
-        <div class="contact-intro">Let's<br><em>Build</em><br>Something.</div>
+        <div class="contact-intro">Lets<br><em>Talk</em>.</div>
         <p class="contact-desc">
-          Open to research collaborations, consulting engagements, and conversations
-          about hard problems in hardware, sensing, and AI.
+          Open to conversations about hard problems in hardware, sensing, and AI.
         </p>
         <a href="mailto:contact@agoshsaini.com" class="btn-primary">contact@agoshsaini.com</a>
       </div>
@@ -712,7 +757,7 @@
 
 <!-- ── FOOTER ── -->
 <footer>
-  <a href="#hero" class="footer-logo">Agosh.</a>
+  <a href="#hero" class="footer-logo">Agosh Saini</a>
   <a href="/game" class="footer-game">▶ AGOSH.EXE — Gamer version under construction</a>
   <div class="footer-copy">© 2026 Agosh Saini</div>
 </footer>
@@ -725,6 +770,23 @@
   }, { threshold: 0.08 });
 
   document.querySelectorAll('.fade-in').forEach(function(el) { observer.observe(el); });
+
+  var toggle = document.getElementById('nav-toggle');
+  var navLinks = document.getElementById('nav-links');
+
+  toggle.addEventListener('click', function() {
+    var open = navLinks.classList.toggle('open');
+    toggle.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open);
+  });
+
+  navLinks.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      navLinks.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', false);
+    });
+  });
 </script>
 
 </body>
