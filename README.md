@@ -10,16 +10,12 @@ Personal portfolio website for Agosh Saini — built with plain HTML/CSS/JS and 
 
 ## Structure
 
-```
+```text
 .
 ├── index.html          # Main site — one-page summary
 ├── game.html           # AGOSH.EXE — "under construction" placeholder (served at /game)
 ├── WIP/game.html       # Work-in-progress playable game version (not linked/deployed)
-├── Branding/           # Design system & brand guidelines
-│   ├── DESIGN.md       # Design tokens, typography, principles
-│   └── agosh-brand.html # Visual brand reference
-├── Inspiration/        # Design inspiration files
-├── vercel.json         # Hosting config (clean URLs, headers)
+├── vercel.json         # Hosting config (clean URLs, security headers)
 ├── .vercelignore       # Excludes WIP/ from deployment
 └── .gitignore
 ```
@@ -37,7 +33,7 @@ python3 -m http.server 8765
 ## Links
 
 | | |
-|---|---|
+| --- | --- |
 | Website | https://agoshsaini.com |
 | Email | contact@agoshsaini.com |
 | LinkedIn | https://www.linkedin.com/in/agosh-saini/ |
