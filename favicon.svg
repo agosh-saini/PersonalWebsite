@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#E8503A"/>
+  <text
+    x="16" y="23"
+    font-family="'Arial Black', 'Arial', sans-serif"
+    font-weight="900"
+    font-size="15"
+    text-anchor="middle"
+    fill="#F2E8D9"
+    letter-spacing="-0.5">AS</text>
+</svg>
